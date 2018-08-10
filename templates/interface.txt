@@ -1,0 +1,3 @@
+{{ interface_name }}
+switchport mode access
+switchport access vlan {{ vlan_id }}

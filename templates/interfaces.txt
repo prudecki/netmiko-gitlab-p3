@@ -1,0 +1,6 @@
+{% for x in interfaces %}
+{{ x.name }}
+  switchport mode access
+  switchport access vlan {{ x.vlan }}
+{% endfor %}
+
