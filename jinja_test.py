@@ -1,7 +1,6 @@
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Environment, FileSystemLoader, Template
 import os
-
-THIS_DIR = os.path.dirname(os.path.abspath(__file__))
+import requests
 
 
 int_dict = [
@@ -13,17 +12,25 @@ int_dict = [
     }
 ]
 
-j2_env = Environment(loader=FileSystemLoader('./templates'),
-                     trim_blocks=True)
+int_template = requests.get('http://172.17.0.3/api/v4/projects/1/repository/files/access/raw?ref=master', headers={'PRIVATE-TOKEN': 'x6sP6xf57gb5sxxiXutq'})
+if int_template.status_code == 200:
+    int_access = Template(int_template.text)
+else:
+    requests.exceptions.RequestException()
 
-for interface in int_dict:
-    print(j2_env.get_template('interface.txt').render(
-        interface_name=interface['name'], vlan_id=interface['vlan']
-    ))
+
+print(int_access)
+
+#j2_env = Environment(loader=FileSystemLoader('./templates'),
+#                     trim_blocks=True)
+
+#for interface in int_dict:
+#    print(j2_env.get_template('interface.txt').render(
+#        interface_name=interface['name'], vlan_id=interface['vlan']
+#    ))
 
 print('-----------------------------------------------')
 
-print(j2_env.get_template('interfaces.txt').render(
-    interfaces=int_dict))
+print(int_access.render(interfaces=int_dict))
 
-j2_env.list_templates()
+
