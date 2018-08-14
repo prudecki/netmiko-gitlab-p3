@@ -18,7 +18,6 @@ class Device:
         self.username = username
         self.password = password
 
-
     def connect(self):
         self.connect = False
         try:
@@ -29,7 +28,6 @@ class Device:
         if not self.connect:
             logger.critical('No devices to connect to')
             sys.exit()
-
 
     def push_template(self):
         if isinstance(self.template, list):
@@ -52,8 +50,6 @@ class Device:
             list_error = AttributeError('Problem with converting template to list')
             logger.critical(list_error)
             raise list_error
-
-
 
 
 class Switch(Device):
@@ -127,7 +123,9 @@ for ip, device in devices.items():
 
 try:
     result = devices['172.17.0.100'].download_template()
-    result = devices['172.17.0.100'].push_template()
+    result1 = devices['172.17.0.100'].push_template()
+    result2 = devices['172.17.0.101'].download_template()
+    result3 = devices['172.17.0.101'].push_template()
 except ConfigInputException:
     print('ZLAPALEM DZIADA')
 
