@@ -11,53 +11,32 @@ import getpass
 
 logzero.loglevel(logging.DEBUG)
 
-devices_ip = '''
-172.17.0.100
-172.17.0.101
-'''
-devices_ip_strip = devices_ip.strip().splitlines()
 
-username = input('Username: ')
-password = getpass.getpass('Password: ')
+class Device:
+    def __init__(self, ip, username, password):
+        self.ip = ip
+        self.username = username
+        self.password = password
 
 
-def devices_connect(devices):
-    connect = False
-    n = int(0)
-    for device in devices:
+    def connect(self):
+        self.connect = False
         try:
-            print('~'*100 + f'\nConnecting to device: {device}')
-            connect[n] = ConnectHandler(ip=device, device_type='cisco_ios', username=username, password=password)
-            n = n+1
+            print('~'*100 + f'\nConnecting to device: {self.ip}')
+            self.connect = ConnectHandler(ip=self.ip, device_type='cisco_ios', username=self.username, password=self.password)
         except (NetMikoAuthenticationException, NetMikoTimeoutException) as conn_error:
             logger.warning(f'Unable to connect to device:\n{conn_error}')
-    if not connect:
-        logger.critical('No devices to connect to')
-        sys.exit()
+        if not self.connect:
+            logger.critical('No devices to connect to')
+            sys.exit()
 
 
-class ConfigInputException(Exception):
-    pass
-
-
-def push_standard_config():
-    logger.debug('trying to connect to GITLAB')
-    try:
-        git_req = requests.get('http://172.17.0.3/api/v4/projects/1/repository/files/start/raw?ref=master', headers={'PRIVATE-TOKEN': 'x6sP6xf57gb5sxxiXutq'})
-    except requests.exceptions.RequestException as req_error:
-        logger.critical(f'unable to connect to GITLAB:\n{req_error}')
-        return False
-    logger.debug('checking if connection was successful')
-    if git_req.status_code == 200:
-        logger.debug('connection to GITLAB successful')
-        out = git_req.text.splitlines()
-        if isinstance(out, list):
-            logger.debug(f'about to send this configuration to device:\n{out}')
-            logger.debug(f'connecting to devices:\n{devices_ip}')
-            devices_connect(devices=devices_ip_strip)
+    def push_template(self):
+        if isinstance(self.template, list):
+            logger.debug(f'about to send this configuration to device:\n{self.template}')
+            logger.debug(f'connecting to device:\n{self.ip}')
             try:
-                abc = devices_connect.
-                sendconf = connect.send_config_set(out)
+                sendconf = self.connect.send_config_set(self.template)
             except Exception as sendconf_error:
                 logger.critical(sendconf_error)
                 return False
@@ -73,15 +52,82 @@ def push_standard_config():
             list_error = AttributeError('Problem with converting template to list')
             logger.critical(list_error)
             raise list_error
-    else:
-        logger.info('Problem with downloading the template')
-        return False
 
 
-result = False
+
+
+class Switch(Device):
+
+    def who_am_i(self):
+        return "Switch"
+
+    def download_template(self):
+        logger.debug('trying to connect to GITLAB')
+        try:
+            git_req = requests.get('http://172.17.0.3/api/v4/projects/1/repository/files/switch/raw?ref=master',
+                                   headers={'PRIVATE-TOKEN': 'x6sP6xf57gb5sxxiXutq'})
+        except requests.exceptions.RequestException as req_error:
+            logger.critical(f'unable to connect to GITLAB:\n{req_error}')
+            return False
+        if git_req.status_code == 200:
+            logger.debug('connection to GITLAB successful')
+            self.template = git_req.text.splitlines()
+            return True
+        else:
+            logger.info('Problem with downloading the template')
+            return False
+
+
+class Router(Device):
+
+    def who_am_i(self):
+        return "Router"
+
+    def download_template(self):
+        logger.debug('trying to connect to GITLAB')
+        try:
+            git_req = requests.get('http://172.17.0.3/api/v4/projects/1/repository/files/router/raw?ref=master',
+                                   headers={'PRIVATE-TOKEN': 'x6sP6xf57gb5sxxiXutq'})
+        except requests.exceptions.RequestException as req_error:
+            logger.critical(f'unable to connect to GITLAB:\n{req_error}')
+            return False
+        if git_req.status_code == 200:
+            logger.debug('connection to GITLAB successful')
+            self.template = git_req.text.splitlines()
+            return True
+        else:
+            logger.info('Problem with downloading the template')
+            return False
+
+
+class ConfigInputException(Exception):
+    pass
+
+
+# username = input('Username: ')
+# password = getpass.getpass('Password: ')
+
+# devices = {}
+# for ip in devices_ip_strip:
+#     devices[ip] = Device(ip, username, password)
+
+devices = {
+    '172.17.0.100': Switch('172.17.0.100', 'test', 'test'),
+    '172.17.0.101': Router('172.17.0.101', 'test', 'test')
+}
+
+
+for ip, device in devices.items():
+    device.connect()
+    print(device.who_am_i())
+
+
+
+
 
 try:
-    result = push_standard_config()
+    result = devices['172.17.0.100'].download_template()
+    result = devices['172.17.0.100'].push_template()
 except ConfigInputException:
     print('ZLAPALEM DZIADA')
 
