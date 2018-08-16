@@ -8,6 +8,7 @@ from logzero import logger
 import sys
 import os
 import getpass
+import zenoss
 
 logzero.loglevel(logging.DEBUG)
 
@@ -95,21 +96,23 @@ class Router(Device):
             logger.info('Problem with downloading the template')
             return False
 
+class ZenossToCSV:
+    def __init__(self):
 
 class ConfigInputException(Exception):
     pass
 
 
-# username = input('Username: ')
-# password = getpass.getpass('Password: ')
+username = input('Username: ')
+password = getpass.getpass('Password: ')
 
 # devices = {}
 # for ip in devices_ip_strip:
 #     devices[ip] = Device(ip, username, password)
 
 devices = {
-    '172.17.0.100': Switch('172.17.0.100', 'test', 'test'),
-    '172.17.0.101': Router('172.17.0.101', 'test', 'test')
+    '172.17.0.100': Switch('172.17.0.100', username, password),
+    '172.17.0.101': Router('172.17.0.101', username, password)
 }
 
 
@@ -128,6 +131,8 @@ try:
     result3 = devices['172.17.0.101'].push_template()
 except ConfigInputException:
     print('ZLAPALEM DZIADA')
+except AttributeError:
+    print('error while converting GITLAB template')
 
 if not result:
     sys.exit()
